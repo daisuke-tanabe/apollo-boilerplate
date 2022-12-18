@@ -1,7 +1,7 @@
 {
   "extends": [
     "airbnb-base",
-    "airbnb-typescript",
+    "airbnb-typescript/base",
     "prettier"
   ],
   "parserOptions": {
