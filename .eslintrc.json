@@ -1,0 +1,38 @@
+{
+  "extends": [
+    "airbnb-base",
+    "airbnb-typescript",
+    "prettier"
+  ],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    // アロー関数の中括弧使用は任意とする
+    "arrow-body-style": "off",
+
+    // 名前付きなのかデフォルトなのか統一する意味をさほど感じなかったので無効にする
+    "import/prefer-default-export": "off",
+
+    // import の順番ルールを定義する
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index",
+          "object"
+        ],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ]
+  }
+}
