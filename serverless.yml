@@ -3,15 +3,27 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: ap-northeast-1
+  # API GatewayのCORS
+  # https://www.serverless.com/framework/docs/providers/aws/events/http-api/
   httpApi:
-    cors: true
+    cors:
+      allowedOrigins:
+        - https://nextjs-boilerplate-two-rosy.vercel.app
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - OPTIONS
+      allowCredentials: true
 functions:
   graphql:
     # Make sure your file path is correct!
     # (e.g., if your file is in the root folder use server.graphqlHandler )
     # The format is: <FILENAME>.<HANDLER>
     handler: src/server.graphqlHandler
-    # ここがAPI Gatewayのルートに設定されるのでCORSに阻まれたら見たほうがよい
+    # API Gatewayのルート(?)
     events:
       - httpApi:
           path: /
