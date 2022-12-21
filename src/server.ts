@@ -6,7 +6,6 @@ import express from 'express';
 import cors from 'cors';
 import http from 'http';
 
-
 const typeDefs = `#graphql
   type Book {
     title: String
