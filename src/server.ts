@@ -1,4 +1,5 @@
 import { ApolloServer } from '@apollo/server';
+import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import serverlessExpress from '@vendia/serverless-express';
@@ -10,18 +11,26 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import { gql } from 'graphql-tag';
 import http from 'http';
-import { decode } from "next-auth/jwt";
+import { decode } from 'next-auth/jwt';
+import fetch from "node-fetch";
 
-const typeDefs = `#graphql
+const typeDefs = gql`
   type Book {
     id: String
     title: String
     author: String
   }
 
+  type User {
+    name: String
+    email: String
+  }
+
   type Query {
     books: [Book]
+    user: User
   }
 `;
 
@@ -40,7 +49,14 @@ const books = [
 
 const resolvers = {
   Query: {
+    // https://www.apollographql.com/docs/apollo-server/data/resolvers/#handling-arguments
     books: () => books,
+    // TODO 適当にAnyにしたので後で直す
+    user: (parent: any, args: any, contextValue: any) => {
+      return {
+        ...contextValue
+      }
+    }
   },
 };
 
@@ -48,8 +64,7 @@ const app = express();
 const httpServer = http.createServer(app);
 
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+  schema: buildSubgraphSchema({ typeDefs, resolvers }),
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
@@ -58,19 +73,42 @@ server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
 app.use(cookieParser());
 
 app.use(
-  // serverless.ymlで設定している
+  // corsはserverless.ymlで設定している
   cors(),
   express.json(),
   expressMiddleware(server, {
     context: async ({ req }) => {
-      // TODO ローカルと本番でキー名が異なるので後で対応を考える
-      const token = req.cookies['__Secure-next-auth.session-token'];
-      const decodedToken = await decode({
-        token,
-        secret: process.env.NEXTAUTH_SECRET as string
-      })
-      console.log(decodedToken)
-      return {};
+      console.log('authorization', req.headers.authorization);
+
+      const authorization = req.headers.authorization?.replace('Bearer', '').trim();
+
+      if (authorization) {
+        const decodedToken = await decode({
+          token: authorization,
+          secret: process.env.NEXTAUTH_SECRET as string
+        });
+
+        const response = await fetch('https://api.github.com/user', {
+          headers: {
+            // @ts-ignore
+            Authorization: `Bearer ${decodedToken.accessToken}`
+          }
+        });
+
+        // // TODO このアサートは悪いやり方なので後で直す
+        const data = await response.json() as { name: string, email: string };
+
+        return {
+          name: data.name,
+          email: data.email
+        };
+      }
+
+      console.log('req.headers.authorizationがないですね')
+      return {
+        name: '',
+        email: ''
+      }
     },
   })
 );

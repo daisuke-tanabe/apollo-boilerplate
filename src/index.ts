@@ -1,4 +1,5 @@
 import { ApolloServer } from '@apollo/server';
+import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import bodyParser from 'body-parser';
@@ -10,8 +11,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import { gql } from 'graphql-tag';
 import http from 'http';
 import { decode } from 'next-auth/jwt';
+import fetch from 'node-fetch';
 
 interface MyContext {
   token?: String;
@@ -21,15 +24,21 @@ const app = express();
 
 const httpServer = http.createServer(app);
 
-const typeDefs = `#graphql
+const typeDefs = gql`
   type Book {
     id: String
     title: String
     author: String
   }
 
+  type User {
+    name: String
+    email: String
+  }
+
   type Query {
     books: [Book]
+    user: User
   }
 `;
 
@@ -48,13 +57,19 @@ const books = [
 
 const resolvers = {
   Query: {
+    // https://www.apollographql.com/docs/apollo-server/data/resolvers/#handling-arguments
     books: () => books,
+    // TODO 適当にAnyにしたので後で直す
+    user: (parent: any, args: any, contextValue: any) => {
+      return {
+        ...contextValue
+      }
+    }
   },
 };
 
 const server = new ApolloServer<MyContext>({
-  typeDefs,
-  resolvers,
+  schema: buildSubgraphSchema({ typeDefs, resolvers }),
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
@@ -71,14 +86,42 @@ app.use(
   bodyParser.json({ limit: '50mb' }),
   expressMiddleware(server, {
     context: async ({ req }) => {
-      // TODO ローカルと本番でキー名が異なるので後で対応を考える
-      const token = req.cookies['next-auth.session-token'] || req.cookies['__Secure-next-auth.session-token'] ;
-      const decodedToken = await decode({
-        token,
-        secret: process.env.NEXTAUTH_SECRET as string
-      })
-      console.log(decodedToken)
-      return {};
+      console.log('authorization', req.headers.authorization);
+
+      const authorization = req.headers.authorization?.replace('Bearer', '').trim();
+      // console.log('authorization:', authorization);
+
+      if (authorization) {
+        const decodedToken = await decode({
+          token: authorization,
+          secret: process.env.NEXTAUTH_SECRET as string
+        });
+        // console.log('decodedToken:', decodedToken);
+
+        const response = await fetch('https://api.github.com/user', {
+          headers: {
+            // @ts-ignore
+            Authorization: `Bearer ${decodedToken.accessToken}`
+          }
+        });
+        // console.log(response);
+
+        // // TODO このアサートは悪いやり方なので後で直す
+        const data = await response.json() as { name: string, email: string };
+
+        // console.log(data);
+
+        return {
+          name: data.name,
+          email: data.email
+        };
+      }
+
+      console.log('req.headers.authorizationがないですね')
+      return {
+        name: '',
+        email: ''
+      }
     },
   }),
 );
