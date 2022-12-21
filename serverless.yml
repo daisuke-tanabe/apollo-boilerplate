@@ -1,4 +1,5 @@
 service: apollo-lambda
+useDotenv: true
 provider:
   name: aws
   runtime: nodejs18.x
@@ -23,6 +24,8 @@ functions:
     # (e.g., if your file is in the root folder use server.graphqlHandler )
     # The format is: <FILENAME>.<HANDLER>
     handler: src/server.graphqlHandler
+    environment:
+      NEXTAUTH_SECRET: ${env:NEXTAUTH_SECRET}
     # API Gatewayのルート(?)
     events:
       - httpApi:
