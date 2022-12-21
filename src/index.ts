@@ -71,7 +71,8 @@ app.use(
   bodyParser.json({ limit: '50mb' }),
   expressMiddleware(server, {
     context: async ({ req }) => {
-      const token = req.cookies['next-auth.session-token'];
+      // TODO ローカルと本番でキー名が異なるので後で対応を考える
+      const token = req.cookies['next-auth.session-token'] || req.cookies['__Secure-next-auth.session-token'] ;
       const decodedToken = await decode({
         token,
         secret: process.env.NEXTAUTH_SECRET as string
