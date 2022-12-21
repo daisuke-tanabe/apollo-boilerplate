@@ -65,7 +65,7 @@ app.use(cookieParser());
 app.use(
   '/',
   cors<cors.CorsRequest>({
-    origin: [process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://nextjs-boilerplate-two-rosy.vercel.app'],
+    origin: ['http://localhost:3000'],
     credentials: true
   }),
   bodyParser.json({ limit: '50mb' }),

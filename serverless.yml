@@ -13,6 +13,7 @@ provider:
       allowedHeaders:
         - Content-Type
         - Authorization
+        - Cookie
       allowedMethods:
         - GET
         - POST
