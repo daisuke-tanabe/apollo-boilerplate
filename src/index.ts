@@ -34,6 +34,11 @@ const typeDefs = gql`
   type User {
     name: String
     email: String
+    picture: String
+    sub: String
+    iat: Int
+    exp: Int
+    jti: String
   }
 
   type Query {
@@ -61,6 +66,7 @@ const resolvers = {
     books: () => books,
     // TODO 適当にAnyにしたので後で直す
     user: (parent: any, args: any, contextValue: any) => {
+      console.log(contextValue);
       return {
         ...contextValue
       }
@@ -86,38 +92,17 @@ app.use(
   bodyParser.json({ limit: '50mb' }),
   expressMiddleware(server, {
     context: async ({ req }) => {
-      console.log('authorization', req.headers.authorization);
-
       const authorization = req.headers.authorization?.replace('Bearer', '').trim();
-      // console.log('authorization:', authorization);
 
       if (authorization) {
         const decodedToken = await decode({
           token: authorization,
           secret: process.env.NEXTAUTH_SECRET as string
         });
-        // console.log('decodedToken:', decodedToken);
 
-        const response = await fetch('https://api.github.com/user', {
-          headers: {
-            // @ts-ignore
-            Authorization: `Bearer ${decodedToken.accessToken}`
-          }
-        });
-        // console.log(response);
-
-        // // TODO このアサートは悪いやり方なので後で直す
-        const data = await response.json() as { name: string, email: string };
-
-        // console.log(data);
-
-        return {
-          name: data.name,
-          email: data.email
-        };
+        return { ...decodedToken };
       }
 
-      console.log('req.headers.authorizationがないですね')
       return {
         name: '',
         email: ''

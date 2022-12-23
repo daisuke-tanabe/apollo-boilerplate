@@ -26,6 +26,11 @@ const typeDefs = gql`
   type User {
     name: String
     email: String
+    picture: String
+    sub: String
+    iat: Int
+    exp: Int
+    jti: String
   }
 
   type Query {
@@ -78,8 +83,6 @@ app.use(
   express.json(),
   expressMiddleware(server, {
     context: async ({ req }) => {
-      console.log('authorization', req.headers.authorization);
-
       const authorization = req.headers.authorization?.replace('Bearer', '').trim();
 
       if (authorization) {
@@ -88,23 +91,9 @@ app.use(
           secret: process.env.NEXTAUTH_SECRET as string
         });
 
-        const response = await fetch('https://api.github.com/user', {
-          headers: {
-            // @ts-ignore
-            Authorization: `Bearer ${decodedToken.accessToken}`
-          }
-        });
-
-        // // TODO このアサートは悪いやり方なので後で直す
-        const data = await response.json() as { name: string, email: string };
-
-        return {
-          name: data.name,
-          email: data.email
-        };
+        return { ...decodedToken };
       }
 
-      console.log('req.headers.authorizationがないですね')
       return {
         name: '',
         email: ''
