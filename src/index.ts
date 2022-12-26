@@ -2,6 +2,7 @@ import { ApolloServer } from '@apollo/server';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { PrismaClient } from '@prisma/client'
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -14,17 +15,20 @@ import express from 'express';
 import { gql } from 'graphql-tag';
 import http from 'http';
 import { decode } from 'next-auth/jwt';
-import fetch from 'node-fetch';
-
-interface MyContext {
-  token?: String;
-}
 
 const app = express();
 
 const httpServer = http.createServer(app);
 
+const prisma = new PrismaClient();
+
 const typeDefs = gql`
+  type Test {
+    id: Int
+    name: String
+    created_at: String
+  }
+
   type Book {
     id: String
     title: String
@@ -44,6 +48,7 @@ const typeDefs = gql`
   type Query {
     books: [Book]
     user: User
+    test: [Test]
   }
 `;
 
@@ -70,11 +75,12 @@ const resolvers = {
       return {
         ...contextValue
       }
-    }
+    },
+    test: () => prisma.test.findMany()
   },
 };
 
-const server = new ApolloServer<MyContext>({
+const server = new ApolloServer({
   schema: buildSubgraphSchema({ typeDefs, resolvers }),
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
