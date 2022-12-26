@@ -1,21 +1,19 @@
+import http from 'http';
+
 import { ApolloServer } from '@apollo/server';
-import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { PrismaClient } from '@prisma/client'
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { PrismaClient } from '@prisma/client';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-
-// https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 import dotenv from 'dotenv';
-// TODO もしかしたらここで宣言する必要はないかもしれないが念の為
-dotenv.config();
-
 import express from 'express';
 import { gql } from 'graphql-tag';
-import http from 'http';
 import { decode } from 'next-auth/jwt';
+
+dotenv.config();
 
 const app = express();
 
@@ -73,10 +71,10 @@ const resolvers = {
     // TODO 適当にAnyにしたので後で直す
     user: (parent: any, args: any, contextValue: any) => {
       return {
-        ...contextValue
-      }
+        ...contextValue,
+      };
     },
-    test: () => prisma.test.findMany()
+    test: () => prisma.test.findMany(),
   },
 };
 
@@ -95,7 +93,7 @@ app.use(
   '/',
   cors<cors.CorsRequest>({
     origin: ['http://localhost:3000'],
-    credentials: true
+    credentials: true,
   }),
   bodyParser.json({ limit: '50mb' }),
   expressMiddleware(server, {
@@ -106,7 +104,7 @@ app.use(
       if (authorization) {
         const decodedToken = await decode({
           token: authorization,
-          secret: process.env.NEXTAUTH_SECRET as string
+          secret: process.env.NEXTAUTH_SECRET as string,
         });
         return { ...decodedToken };
       }
@@ -114,13 +112,14 @@ app.use(
       // TODO これも適当な処理なので後で削除する
       return {
         name: '',
-        email: ''
-      }
+        email: '',
+      };
     },
   }),
 );
 
-await new Promise<void>((resolve) => httpServer.listen({ port: 4000 }, resolve));
-
-console.log(`🚀 Server ready at http://localhost:4000/`);
-
+new Promise<void>((resolve) => {
+  httpServer.listen({ port: 4000 }, resolve);
+}).then(() => {
+  console.log(`🚀 Server ready at http://localhost:4000/`);
+});
