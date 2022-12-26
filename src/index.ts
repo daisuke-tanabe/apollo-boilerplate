@@ -9,6 +9,7 @@ import cors from 'cors';
 
 // https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 import dotenv from 'dotenv';
+// TODO もしかしたらここで宣言する必要はないかもしれないが念の為
 dotenv.config();
 
 import express from 'express';
@@ -67,11 +68,10 @@ const books = [
 
 const resolvers = {
   Query: {
-    // https://www.apollographql.com/docs/apollo-server/data/resolvers/#handling-arguments
     books: () => books,
+    // https://www.apollographql.com/docs/apollo-server/data/resolvers/#handling-arguments
     // TODO 適当にAnyにしたので後で直す
     user: (parent: any, args: any, contextValue: any) => {
-      console.log(contextValue);
       return {
         ...contextValue
       }
@@ -81,6 +81,8 @@ const resolvers = {
 };
 
 const server = new ApolloServer({
+  // サブグラフスキーマを返す関数
+  // https://www.apollographql.com/docs/apollo-server/using-federation/api/apollo-subgraph/#buildsubgraphschema
   schema: buildSubgraphSchema({ typeDefs, resolvers }),
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
@@ -98,17 +100,18 @@ app.use(
   bodyParser.json({ limit: '50mb' }),
   expressMiddleware(server, {
     context: async ({ req }) => {
+      // FEから渡されたトークンを検証して内包情報をresolverに渡す処理
+      // TODO 期限切れ確認してレスポンスを返す処理が必要
       const authorization = req.headers.authorization?.replace('Bearer', '').trim();
-
       if (authorization) {
         const decodedToken = await decode({
           token: authorization,
           secret: process.env.NEXTAUTH_SECRET as string
         });
-
         return { ...decodedToken };
       }
 
+      // TODO これも適当な処理なので後で削除する
       return {
         name: '',
         email: ''
