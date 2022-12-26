@@ -13,25 +13,25 @@ import express from 'express';
 import { gql } from 'graphql-tag';
 import { decode } from 'next-auth/jwt';
 
+const prisma = new PrismaClient();
+
 dotenv.config();
 
 const app = express();
 
 const httpServer = http.createServer(app);
 
-const prisma = new PrismaClient();
-
 const typeDefs = gql`
-  type Test {
-    id: Int
-    name: String
-    created_at: String
-  }
-
   type Book {
-    id: String
+    id: Int
     title: String
     author: String
+  }
+
+  type DBUser {
+    id: ID
+    name: String
+    email: String
   }
 
   type User {
@@ -47,7 +47,7 @@ const typeDefs = gql`
   type Query {
     books: [Book]
     user: User
-    test: [Test]
+    users: [DBUser]
   }
 `;
 
@@ -64,6 +64,8 @@ const books = [
   },
 ];
 
+// prismaチートシート
+// https://qiita.com/koffee0522/items/92be1826f1a150bfe62e
 const resolvers = {
   Query: {
     books: () => books,
@@ -74,7 +76,12 @@ const resolvers = {
         ...contextValue,
       };
     },
-    test: () => prisma.test.findMany(),
+    users: async () => {
+      const user = await prisma.user.findMany();
+      return {
+        ...prisma.user.findMany()
+      }
+    }
   },
 };
 

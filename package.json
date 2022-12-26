@@ -12,6 +12,9 @@
     "lint": "eslint src/**/*.ts",
     "start": "node --loader ts-node/esm src/index.ts"
   },
+  "prisma": {
+    "seed": "node --loader ts-node/esm prisma/seed.ts"
+  },
   "dependencies": {
     "@apollo/server": "^4.3.0",
     "@apollo/subgraph": "^2.2.2",
