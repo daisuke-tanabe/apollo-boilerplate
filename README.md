@@ -2,7 +2,9 @@
 
 # Usage
 
-`.env.example`をコピーし、`.env`にする。
+`.env.example`をコピーし、`.env`にリネーム。
+
+`.env`内のDBを設定しておく。
 
 `npm install`で依存関係をインストール。
 
