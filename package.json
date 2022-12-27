@@ -7,6 +7,7 @@
     "node": "18.12.1"
   },
   "scripts": {
+    "build": "tsc",
     "dev": "nodemon",
     "format": "prettier --write src/**/*.ts",
     "lint": "eslint src/**/*.ts",
