@@ -1,17 +1,22 @@
-import http from 'http';
+import http, {type IncomingHttpHeaders} from 'http';
 
-import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { buildSubgraphSchema } from '@apollo/subgraph';
-import { PrismaClient } from '@prisma/client';
+import {ApolloServer, type BaseContext} from '@apollo/server';
+import {expressMiddleware} from '@apollo/server/express4';
+import {ApolloServerPluginDrainHttpServer} from '@apollo/server/plugin/drainHttpServer';
+import {buildSubgraphSchema} from '@apollo/subgraph';
+import {PrismaClient} from '@prisma/client';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import { gql } from 'graphql-tag';
-import { decode } from 'next-auth/jwt';
+import {gql} from 'graphql-tag';
+import {decode} from 'next-auth/jwt';
+
+type Authorization = IncomingHttpHeaders['authorization']
+type MyContext = {
+  token: Authorization
+}
 
 const prisma = new PrismaClient();
 
@@ -64,31 +69,41 @@ const books = [
   },
 ];
 
+const getToken = (authorization: Authorization) => {
+  return authorization?.replace('Bearer', '').trim();
+};
+
+const verifyToken = async (token: string | undefined) => {
+  return await decode({
+    token,
+    secret: process.env.NEXTAUTH_SECRET as string,
+  }).catch(() => null);
+};
+
 // prismaチートシート
 // https://qiita.com/koffee0522/items/92be1826f1a150bfe62e
 const resolvers = {
   Query: {
     books: () => books,
+    // TODO 現状はアクセストークンの内容を返却するだけ
     // https://www.apollographql.com/docs/apollo-server/data/resolvers/#handling-arguments
-    // TODO 適当にAnyにしたので後で直す
-    user: (parent: any, args: any, contextValue: any) => {
-      return {
-        ...contextValue,
-      };
+    user: async (parent: unknown, args: unknown, { token }: MyContext) => {
+      const accessToken = await verifyToken(token);
+      return accessToken && { ...accessToken }
     },
     users: async () => {
       const user = await prisma.user.findMany();
-      return {
-        ...prisma.user.findMany()
-      }
+      return { ...user };
     }
   },
 };
 
-const server = new ApolloServer({
-  // サブグラフスキーマを返す関数
+const server = new ApolloServer<MyContext>({
+  // サブグラフスキーマにしないとBFFのGraphqlからAPIを叩くことができない
   // https://www.apollographql.com/docs/apollo-server/using-federation/api/apollo-subgraph/#buildsubgraphschema
-  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+  schema: buildSubgraphSchema([
+    { typeDefs, resolvers }
+  ]),
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
@@ -105,22 +120,9 @@ app.use(
   bodyParser.json({ limit: '50mb' }),
   expressMiddleware(server, {
     context: async ({ req }) => {
-      // FEから渡されたトークンを検証して内包情報をresolverに渡す処理
-      // TODO 期限切れ確認してレスポンスを返す処理が必要
-      const authorization = req.headers.authorization?.replace('Bearer', '').trim();
-      if (authorization) {
-        const decodedToken = await decode({
-          token: authorization,
-          secret: process.env.NEXTAUTH_SECRET as string,
-        });
-        return { ...decodedToken };
-      }
-
-      // TODO これも適当な処理なので後で削除する
       return {
-        name: '',
-        email: '',
-      };
+        token: getToken(req.headers.authorization)
+      }
     },
   }),
 );
