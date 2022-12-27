@@ -1,22 +1,22 @@
-import http, {type IncomingHttpHeaders} from 'http';
+import http, { type IncomingHttpHeaders } from 'http';
 
-import {ApolloServer, type BaseContext} from '@apollo/server';
-import {expressMiddleware} from '@apollo/server/express4';
-import {ApolloServerPluginDrainHttpServer} from '@apollo/server/plugin/drainHttpServer';
-import {buildSubgraphSchema} from '@apollo/subgraph';
-import {PrismaClient} from '@prisma/client';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { PrismaClient } from '@prisma/client';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import {gql} from 'graphql-tag';
-import {decode} from 'next-auth/jwt';
+import { gql } from 'graphql-tag';
+import { decode } from 'next-auth/jwt';
 
-type Authorization = IncomingHttpHeaders['authorization']
+type Authorization = IncomingHttpHeaders['authorization'];
 type MyContext = {
-  token: Authorization
-}
+  token: Authorization;
+};
 
 const prisma = new PrismaClient();
 
@@ -73,8 +73,8 @@ const getToken = (authorization: Authorization) => {
   return authorization?.replace('Bearer', '').trim();
 };
 
-const verifyToken = async (token: string | undefined) => {
-  return await decode({
+const verifyToken = (token: string | undefined) => {
+  return decode({
     token,
     secret: process.env.NEXTAUTH_SECRET as string,
   }).catch(() => null);
@@ -89,21 +89,19 @@ const resolvers = {
     // https://www.apollographql.com/docs/apollo-server/data/resolvers/#handling-arguments
     user: async (parent: unknown, args: unknown, { token }: MyContext) => {
       const accessToken = await verifyToken(token);
-      return accessToken && { ...accessToken }
+      return accessToken && { ...accessToken };
     },
     users: async () => {
       const user = await prisma.user.findMany();
       return { ...user };
-    }
+    },
   },
 };
 
 const server = new ApolloServer<MyContext>({
   // サブグラフスキーマにしないとBFFのGraphqlからAPIを叩くことができない
   // https://www.apollographql.com/docs/apollo-server/using-federation/api/apollo-subgraph/#buildsubgraphschema
-  schema: buildSubgraphSchema([
-    { typeDefs, resolvers }
-  ]),
+  schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
@@ -121,8 +119,8 @@ app.use(
   expressMiddleware(server, {
     context: async ({ req }) => {
       return {
-        token: getToken(req.headers.authorization)
-      }
+        token: getToken(req.headers.authorization),
+      };
     },
   }),
 );
