@@ -20,7 +20,6 @@ async function main() {
       name: 'Bob',
     },
   });
-  console.log({ alice, bob });
 }
 main()
   .then(async () => {

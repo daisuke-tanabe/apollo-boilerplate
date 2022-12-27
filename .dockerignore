@@ -1,5 +1,5 @@
 .git
 # ts-nodeを採用しているせいか、node_modulesをignoreするとdockerコンテナーが起動しなくなる
-# node_modules
+node_modules
 README.md
 .gitignore

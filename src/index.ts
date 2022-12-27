@@ -93,7 +93,7 @@ const resolvers = {
     },
     users: async () => {
       const user = await prisma.user.findMany();
-      return { ...user };
+      return user;
     },
   },
 };

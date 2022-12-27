@@ -1,18 +1,20 @@
-FROM node:18-alpine
-ENV NODE_ENV production
+FROM node:18.12.1
+ENV NODE_ENV development
+
+RUN npm install -g prisma
 
 WORKDIR /app
 
+# docker composeのinitオプションが有効になっているので不要だと思いますが確信が持てたら削除します
 # ゾンビプロセスの終了のため
 # https://github.com/krallin/tini
-RUN apk add --no-cache tini
-ENTRYPOINT ["/sbin/tini", "--"]
+#RUN apk add --no-cache tini
+#ENTRYPOINT ["/sbin/tini", "--"]
 
 # 先に依存関係ファイルをコピーする
-COPY --chown=node:node package.json package-lock.json ./
+COPY package*.json ./
+COPY prisma ./prisma/
+
 RUN npm ci
 
-COPY --chown=node:node . .
-CMD ["node", "--loader", "ts-node/esm", "src/index.ts"]
-
-EXPOSE 4000
+COPY . .

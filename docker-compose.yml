@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  # Mysql
+  mysql:
+    image: mysql:8.0.31
+    environment:
+      MYSQL_DATABASE: $MYSQL_DATABASE
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      DATABASE_URL: $DATABASE_URL
+      TZ: $TZ
+    ports:
+      - "3306:3306"
+    # DBの疎通テスト
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+    # ゾンビプロセス対策
+    # https://docs.docker.jp/engine/reference/run.html#init
+    init: true
+
+  # Apollo Server
+  apollo:
+    build:
+      # .でdocker-compose.ymlと同じフォルダにDockerfileがあることを示す
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: $DATABASE_URL
+    command: sh -c "prisma migrate dev && prisma db seed && npm start"
+    # ゾンビプロセス対策
+    # https://docs.docker.jp/engine/reference/run.html#init
+    init: true
+    # services:mysql が立ち上がってDBの疎通テストに合格しているなら services:apollo を立ち上げる
+    depends_on:
+      mysql:
+        condition: service_healthy

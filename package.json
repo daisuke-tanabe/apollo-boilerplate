@@ -6,15 +6,17 @@
   "engines": {
     "node": "18.12.1"
   },
+  "prisma": {
+    "seed": "node --loader ts-node/esm prisma/seed.ts"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "nodemon",
     "format": "prettier --write src/**/*.ts",
     "lint": "eslint src/**/*.ts",
+    "migrate:prisma": "prisma migrate dev --name init",
+    "db:seed": "prisma db seed",
     "start": "ts-node-esm src/index.ts"
-  },
-  "prisma": {
-    "seed": "node --loader ts-node/esm prisma/seed.ts"
   },
   "dependencies": {
     "@apollo/server": "^4.3.0",
@@ -28,7 +30,6 @@
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "next-auth": "^4.18.7",
-    "prisma": "^4.8.0",
     "ts-node": "^10.9.1"
   },
   "devDependencies": {
@@ -44,6 +45,7 @@
     "eslint-plugin-import": "^2.26.0",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.1",
+    "prisma": "^4.8.0",
     "typescript": "4.9.4"
   }
 }

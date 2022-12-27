@@ -5,12 +5,14 @@
 datasource db {
   provider = "mysql"
   // データベースの接続
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
 }
 
 // https://www.prisma.io/docs/concepts/components/prisma-schema/generators
 generator client {
   provider = "prisma-client-js"
+  // nativeはOSを検出してバイナリターゲットを自動的に指定するので恐らくこのままでも大丈夫
+  binaryTargets = ["native"]
 }
 
 // モデルやスキーマの書き方

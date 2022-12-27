@@ -15,8 +15,18 @@
 ### prisma
 
 `prisma migrate dev --name init`でDBマイグレーションを実行する。
+シードを設定しておけばそれも実行される気がする。
 
 `prisma db seed`でDBのシードを実行する。
+
+Dockerを立ち上げたらこれが必要になる。
+```
+// DBのマイグレーションをする
+$ prisma migrate dev --name init
+
+// DBにデータを注入する
+$ prisma db seed
+```
 
 `prisma studio`でデータベース内のデータを表示することが可能。
 
