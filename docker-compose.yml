@@ -30,7 +30,13 @@ services:
       - "4000:4000"
     environment:
       DATABASE_URL: $DATABASE_URL
-    command: sh -c "prisma migrate dev && prisma db seed && npm start"
+    # DBのマイグレーションとデータ注入と開発サーバーの立ち上げ
+    command: sh -c "npx prisma migrate dev && npx prisma db seed && npm run dev"
+    volumes:
+      # 開発環境では全てのファイルをバインドマウントする（ホストでもコンテナでも好きなほうで開発してください）
+      # 下を参考に再度設定する
+      # https://zenn.dev/dove/articles/d02f66cc0aa5c3#%E7%B5%90%E5%B1%80%E3%81%A9%E3%82%8C%E3%81%8C%E3%81%84%E3%81%84%E3%81%AE%E3%81%8B
+      - .:/app
     # ゾンビプロセス対策
     # https://docs.docker.jp/engine/reference/run.html#init
     init: true

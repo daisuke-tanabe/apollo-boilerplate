@@ -1,47 +1,34 @@
 # apollo-boilerplate
 
-## 準備
+## ローカル開発環境について
 
-### 環境変数
+### 1. 準備
 
-`.env.example`をコピーし、`.env`にリネーム。
+#### 1-1. 環境変数ファイルのコピーとリネーム
 
-`.env`内のDBを設定しておく。
+`.env.example`をコピーして`.env`にリネーム。
 
-### npm
+現在は個別で設定してもらうことは特にありません。
 
-`npm install`で依存関係をインストール。
+#### 1-2. Dockerのインストール
 
-### prisma
+DockerとComposeプラグインをインストールしてください。
 
-`prisma migrate dev --name init`でDBマイグレーションを実行する。
-シードを設定しておけばそれも実行される気がする。
+インストール手段は任意ですが一番簡単なのでDocker Desktopです。
+https://www.docker.com/products/docker-desktop/
 
-`prisma db seed`でDBのシードを実行する。
+### 2. 開発環境の起動
 
-Dockerを立ち上げたらこれが必要になる。
-```
-// DBのマイグレーションをする
-$ prisma migrate dev --name init
+#### 2-1. Docker compose
 
-// DBにデータを注入する
-$ prisma db seed
-```
+`$ docker compose up`でイメージの構築とコンテナの構築・実行をする。
 
-`prisma studio`でデータベース内のデータを表示することが可能。
+Mysqlの起動後、PrismaのDBマイグレーションとデータ注入が実行されてからApollo Serverが立ち上がる。
 
-## 開発環境の立ち上げ
+Dockerに変更が入ったら`$ docker compose up --build`でイメージを再構築すること。
 
-準備を完了しておく必要あり。
+### 3. その他
 
-`npm run dev`で開発環境が立ち上がる。
+ローカル開発ではホストとコンテナで`node_modules`の同期をしているため重いかもしれません。
 
-## 製品版の立ち上げ
-
-```
-// コンテナイメージのビルド
-$ docker build -t apollo-boilerplate .
-
-// コンテナの開始
-$ docker run -dp 4000:4000 apollo-boilerplate
-```
+あまりにも重くなったら変更するかもしれません。
