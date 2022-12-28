@@ -10,7 +10,7 @@ services:
       DATABASE_URL: $DATABASE_URL
       TZ: $TZ
     ports:
-      - "3306:3306"
+      - ${MYSQL_PORT}:${MYSQL_PORT}
     # DBの疎通テスト
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
@@ -27,7 +27,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "4000:4000"
+      - ${APOLLO_PORT}:${APOLLO_PORT}
     environment:
       DATABASE_URL: $DATABASE_URL
     # DBのマイグレーションとデータ注入と開発サーバーの立ち上げ

@@ -126,7 +126,7 @@ app.use(
 );
 
 new Promise<void>((resolve) => {
-  httpServer.listen({ port: 4000 }, resolve);
+  httpServer.listen({ port: process.env.APOLLO_PORT }, resolve);
 }).then(() => {
-  console.log(`🚀 Server ready at http://localhost:4000/`);
+  console.log(`🚀 Server ready at http://localhost:${process.env.APOLLO_PORT}/`);
 });
