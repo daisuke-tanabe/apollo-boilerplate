@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2021"],
-    "module": "ES2022",
+    // Node18かつESMの推奨設定
+    // "lib": ["ES2022"], // targetではサポートしていないAPIのライブラリを追加する（今回はES2022まで使うので指定不要）
+    "module": "ES2022",  // Common jsにしないのは現在はES Modules化が進められているため
+    "target": "ES2022", // このバージョンにコンパイルされる
+
     "outDir": "dist",
     "allowJs": true,
     "skipLibCheck": true,
