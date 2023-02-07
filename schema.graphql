@@ -1,0 +1,7 @@
+type Hoge {
+  name: String
+}
+
+type Query {
+  hoge(id: String): Hoge
+}
